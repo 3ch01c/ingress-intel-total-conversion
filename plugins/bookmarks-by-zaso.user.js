@@ -2,7 +2,7 @@
 // @id             iitc-plugin-bookmarks@ZasoGD
 // @name           IITC plugin: Bookmarks for maps and portals
 // @category       Controls
-// @version        0.2.5.@@DATETIMEVERSION@@
+// @version        0.2.6.@@DATETIMEVERSION@@
 // @namespace      https://github.com/jonatkins/ingress-intel-total-conversion
 // @updateURL      @@UPDATEURL@@
 // @downloadURL    @@DOWNLOADURL@@
@@ -196,7 +196,7 @@
 
     window.plugin.bookmarks.bkmrksObj[typeList][ID]['state'] = newFlag;
     window.plugin.bookmarks.saveStorage();
-    window.runHooks('pluginBkmrksEdit');
+    window.runHooks('pluginBkmrksEdit', {"target": "folder", "action": newFlag?"open":"close", "id": ID});
   }
 
   // Load the HTML bookmarks
@@ -616,12 +616,13 @@
     });
 
     if(latlngs.length >= 2 && latlngs.length <= 3) {
+      // TODO: add an API to draw-tools rather than assuming things about it's internals
       var newItem;
-      // var options = {color:"#a24ac3",weight:4,opacity:.5}
-      var options = window.plugin.drawTools.polygonOptions;
-
-      if(latlngs.length == 3) { newItem = L.geodesicPolygon(latlngs, options); }
-      else if(latlngs.length == 2) { newItem = L.geodesicPolyline(latlngs, options); }
+      if(latlngs.length == 2) {
+        newItem = L.geodesicPolyline(latlngs, window.plugin.drawTools.lineOptions);
+      } else {
+        newItem = L.geodesicPolygon(latlngs, window.plugin.drawTools.polygonOptions);
+      }
 
       $('#bkmrksAutoDrawer a.bkmrk.selected').removeClass('selected');
       newItem.addTo(window.plugin.drawTools.drawnItems);

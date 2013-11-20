@@ -198,20 +198,6 @@ window.plugin.portalslist.displayPL = function() {
     width: 800
   });
 
-  // Setup sorting
-  $(document).on('click.portalslist', '#portalslist table th', function() {
-    $('#portalslist').html(window.plugin.portalslist.portalTable($(this).data('sort'),window.plugin.portalslist.sortOrder,window.plugin.portalslist.filter));
-  });
-  $(document).on('click.portalslist', '#portalslist .filterAll', function() {
-    $('#portalslist').html(window.plugin.portalslist.portalTable($(this).data('sort'),window.plugin.portalslist.sortOrder,0));
-  });
-  $(document).on('click.portalslist', '#portalslist .filterRes', function() {
-    $('#portalslist').html(window.plugin.portalslist.portalTable($(this).data('sort'),window.plugin.portalslist.sortOrder,1));
-  });
-  $(document).on('click.portalslist', '#portalslist .filterEnl', function() {
-    $('#portalslist').html(window.plugin.portalslist.portalTable($(this).data('sort'),window.plugin.portalslist.sortOrder,2));
-  });
-
   //run the name resolving process
   resolvePlayerNames();
   
@@ -504,6 +490,19 @@ var setup =  function() {
     '#portalslist .missingNRG { margin: 0; padding: 0; background-color: rgb(27, 65, 94) !important; border: none; position: absolute; top: 0; left: 0; right: 0; opacity: 0.7; }' +
     '#portalslist .portalTitle { display: inline-block; width: 160px !important; min-width: 160px !important; max-width: 160px !important; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }' +
     '</style>');
+  // Setup sorting
+  $(document).on('click.portalslist', '#portalslist table th', function() {
+    $('#portalslist').html(window.plugin.portalslist.portalTable($(this).data('sort'),window.plugin.portalslist.sortOrder,window.plugin.portalslist.filter));
+  });
+  $(document).on('click.portalslist', '#portalslist .filterAll', function() {
+    $('#portalslist').html(window.plugin.portalslist.portalTable($(this).data('sort'),window.plugin.portalslist.sortOrder,0));
+  });
+  $(document).on('click.portalslist', '#portalslist .filterRes', function() {
+    $('#portalslist').html(window.plugin.portalslist.portalTable($(this).data('sort'),window.plugin.portalslist.sortOrder,1));
+  });
+  $(document).on('click.portalslist', '#portalslist .filterEnl', function() {
+    $('#portalslist').html(window.plugin.portalslist.portalTable($(this).data('sort'),window.plugin.portalslist.sortOrder,2));
+  });
 }
 
 // PLUGIN END //////////////////////////////////////////////////////////
