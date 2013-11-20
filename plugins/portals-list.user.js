@@ -369,8 +369,7 @@ window.plugin.portalslist.filterPlayer = function(player) {
 	var hide = $('#displayType').val();
 	var minLvl = $('#from').val();
 	var maxLvl = $('#to').val();
-	var n = player.indexOf(' ');
-	if (n > 0) {
+	if (player.indexOf(' ') >= 0) {
 		// list of players
 		players = player.split(' ');
 	} else {
