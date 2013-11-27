@@ -47,18 +47,20 @@ window.getPortalRange = function(d) {
   $.each(d.resonatorArray.resonators, function(ind, reso) {
     if(!reso) {
       resoMissing = true;
-      return false;
+      return;
     }
     lvl += parseInt(reso.level);
   });
-  if(resoMissing) return 0;
 
-  var range = 160*Math.pow(getPortalLevel(d), 4);
+  var range = {
+    base: 160*Math.pow(getPortalLevel(d), 4),
+    boost: getLinkAmpRangeBoost(d)
+  };
 
-  var boost = getLinkAmpRangeBoost(d);
+  range.range = range.boost * range.base;
+  range.isLinkable = !resoMissing;
 
-  return range*boost;
-
+  return range;
 }
 
 window.getLinkAmpRangeBoost = function(d) {
@@ -89,7 +91,9 @@ window.getAvgResoDist = function(d) {
   var sum = 0, resos = 0;
   $.each(d.resonatorArray.resonators, function(ind, reso) {
     if(!reso) return true;
-    sum += parseInt(reso.distanceToPortal);
+    var resDist = parseInt(reso.distanceToPortal);
+    if (resDist == 0) resDist = 0.01; // set a non-zero but very small distance for zero deployment distance. allows the return value to distinguish between zero deployment distance average and zero resonators
+    sum += resDist;
     resos++;
   });
   return resos ? sum/resos : 0;

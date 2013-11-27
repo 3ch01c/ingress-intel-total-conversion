@@ -33,8 +33,9 @@ public class IntentFragment extends Fragment implements OnScrollListener, OnItem
         mIntents = args.getParcelableArrayList("intents");
         mListView = new IntentListView(getActivity());
         mListView.setIntents(mIntents);
-        if (mScrollIndex != -1 && mScrollTop != -1)
+        if (mScrollIndex != -1 && mScrollTop != -1) {
             mListView.setSelectionFromTop(mScrollIndex, mScrollTop);
+        }
         mListView.setOnScrollListener(this);
         mListView.setOnItemClickListener(this);
 
@@ -43,8 +44,12 @@ public class IntentFragment extends Fragment implements OnScrollListener, OnItem
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        ((ShareActivity) getActivity()).getIntentComparator().trackIntentSelection(mListView.getItem(position));
+
         Intent intent = mListView.getTargetIntent(position);
         startActivity(intent);
+
+        getActivity().finish();
     }
 
     @Override

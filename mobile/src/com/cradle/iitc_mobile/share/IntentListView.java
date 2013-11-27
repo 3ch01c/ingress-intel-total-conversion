@@ -20,6 +20,7 @@ import android.widget.TextView;
 import com.cradle.iitc_mobile.R;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -59,22 +60,23 @@ public class IntentListView extends ListView {
 
     private static final HashSet<CopyHandler> KNOWN_COPY_HANDLERS = new HashSet<CopyHandler>();
 
-    private static void setupKnownCopyHandlers() {
-        if (!KNOWN_COPY_HANDLERS.isEmpty())
-            return;
+    static {
+        if (KNOWN_COPY_HANDLERS.isEmpty()) {
 
-        KNOWN_COPY_HANDLERS.add(new CopyHandler(
-                "com.google.android.apps.docs",
-                "com.google.android.apps.docs.app.SendTextToClipboardActivity"));
+            KNOWN_COPY_HANDLERS.add(new CopyHandler(
+                    "com.google.android.apps.docs",
+                    "com.google.android.apps.docs.app.SendTextToClipboardActivity"));
 
-        KNOWN_COPY_HANDLERS.add(new CopyHandler(
-                "com.aokp.romcontrol",
-                "com.aokp.romcontrol.ShareToClipboard"));
+            KNOWN_COPY_HANDLERS.add(new CopyHandler(
+                    "com.aokp.romcontrol",
+                    "com.aokp.romcontrol.ShareToClipboard"));
+        }
     }
+
+    private HashMap<ComponentName, Intent> mActivities = new HashMap<ComponentName, Intent>();
 
     private IntentAdapter mAdapter;
     private PackageManager mPackageManager;
-    HashMap<ComponentName, Intent> mActivities = new HashMap<ComponentName, Intent>();
 
     public IntentListView(Context context) {
         super(context);
@@ -92,8 +94,6 @@ public class IntentListView extends ListView {
     }
 
     private void init() {
-        setupKnownCopyHandlers();
-
         mPackageManager = getContext().getPackageManager();
         mAdapter = new IntentAdapter();
         setAdapter(mAdapter);
@@ -141,14 +141,22 @@ public class IntentListView extends ListView {
             for (ResolveInfo resolveInfo : activityList) { // search for "Copy to clipboard" handler
                 CopyHandler handler = new CopyHandler(resolveInfo);
 
-                if (KNOWN_COPY_HANDLERS.contains(handler))
+                if (KNOWN_COPY_HANDLERS.contains(handler)) {
                     hasCopyIntent = true;
+                }
             }
 
             // use traditional loop since list may change during iteration
             for (int i = 0; i < activityList.size(); i++) {
                 ResolveInfo info = activityList.get(i);
                 ActivityInfo activity = info.activityInfo;
+
+                // fix bug in PackageManager - a replaced package name might cause non-exported intents to appear
+                if (!activity.exported && !activity.packageName.equals(packageName)) {
+                    activityList.remove(i);
+                    i--;
+                    continue;
+                }
 
                 // remove all IITCm intents, except for SendToClipboard in case Drive is not installed
                 if (activity.packageName.equals(packageName)) {
@@ -172,8 +180,7 @@ public class IntentListView extends ListView {
                     if (resolveInfo.activityInfo.packageName.equals(defaultTarget.activityInfo.packageName)
                             && resolveInfo.activityInfo.name.equals(defaultTarget.activityInfo.name)) {
                         allActivities.add(0, resolveInfo);
-                    }
-                    else {
+                    } else {
                         allActivities.add(resolveInfo);
                     }
                 }
@@ -181,9 +188,10 @@ public class IntentListView extends ListView {
             }
         }
 
+        Collections.sort(allActivities, ((ShareActivity) getContext()).getIntentComparator());
+
         mAdapter.addAll(allActivities);
         mAdapter.setNotifyOnChange(true);
         mAdapter.notifyDataSetChanged();
     }
-
 }

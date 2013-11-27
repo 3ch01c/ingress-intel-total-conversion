@@ -2,7 +2,7 @@
 // @id             iitc-plugin-portals-list@teo96
 // @name           IITC plugin: show list of portals
 // @category       Info
-// @version        0.0.16.@@DATETIMEVERSION@@
+// @version        0.0.18.@@DATETIMEVERSION@@
 // @namespace      https://github.com/jonatkins/ingress-intel-total-conversion
 // @updateURL      @@UPDATEURL@@
 // @downloadURL    @@DOWNLOADURL@@
@@ -26,7 +26,7 @@
 * 0.0.10: Fixed persistent css problem with alert
 * 0.0.9 : bugs hunt
 * 0.0.8 : Aborted to avoid problems with Niantic (export portals informations as csv or kml file)
-* 0.0.7 : more informations avalaible via tooltips (who deployed, energy, ...), new E/AP column 
+* 0.0.7 : more informations available via tooltips (who deployed, energy, ...), new E/AP column 
 * 0.0.6 : Add power charge information into a new column + bugfix
 * 0.0.5 : Filter portals by clicking on 'All portals', 'Res Portals' or 'Enl Portals'
 * 0.0.4 : Add link to portals name, one click to display full information in portal panel, double click to zoom on portal, hover to show address
@@ -49,7 +49,7 @@ window.plugin.portalslist.enlP = 0;
 window.plugin.portalslist.resP = 0;
 window.plugin.portalslist.filter=0;
 
-//fill the listPortals array with portals avalaible on the map (level filtered portals will not appear in the table)
+//fill the listPortals array with portals avaliable on the map (level filtered portals will not appear in the table)
 window.plugin.portalslist.getPortals = function() {
   //filter : 0 = All, 1 = Res, 2 = Enl
   //console.log('** getPortals');
@@ -146,7 +146,7 @@ window.plugin.portalslist.getPortals = function() {
         }
       }else { mods[ind] = ['', '', '']; }
     });
-	console.log(mods);
+
     var APgain= getAttackApGain(d).enemyAp;
     var thisPortal = {'portal': d,
           'name': name,
@@ -198,24 +198,13 @@ window.plugin.portalslist.displayPL = function() {
     width: 800
   });
 
-  // Setup sorting
-  $(document).on('click.portalslist', '#portalslist table th', function() {
-    $('#portalslist').html(window.plugin.portalslist.portalTable($(this).data('sort'),window.plugin.portalslist.sortOrder,window.plugin.portalslist.filter));
-  });
-  $(document).on('click.portalslist', '#portalslist .filterAll', function() {
-    $('#portalslist').html(window.plugin.portalslist.portalTable($(this).data('sort'),window.plugin.portalslist.sortOrder,0));
-  });
-  $(document).on('click.portalslist', '#portalslist .filterRes', function() {
-    $('#portalslist').html(window.plugin.portalslist.portalTable($(this).data('sort'),window.plugin.portalslist.sortOrder,1));
-  });
-  $(document).on('click.portalslist', '#portalslist .filterEnl', function() {
-    $('#portalslist').html(window.plugin.portalslist.portalTable($(this).data('sort'),window.plugin.portalslist.sortOrder,2));
-  });
+  //run the name resolving process
+  resolvePlayerNames();
   
   //debug tools
   //end = new Date().getTime();
   //console.log('***** end : ' + end + ' and Elapse : ' + (end - start));
- }
+}
     
 window.plugin.portalslist.portalTable = function(sortBy, sortOrder, filter) {
   // sortOrder <0 ==> desc, >0 ==> asc, i use sortOrder * -1 to change the state
@@ -301,6 +290,7 @@ window.plugin.portalslist.portalTable = function(sortBy, sortOrder, filter) {
   + '<th ' + sort('s2', sortBy, -1) + '>M2</th>'
   + '<th ' + sort('s3', sortBy, -1) + '>M3</th>'
   + '<th ' + sort('s4', sortBy, -1) + '>M4</th>'
+  + '<th ' + sort('mitigation', sortBy, -1) + '>Mit.</th>'
   + '<th ' + sort('APgain', sortBy, -1) + '>AP Gain</th>'
   + '<th title="Energy / AP Gain ratio" ' + sort('EAP', sortBy, -1) + '>E/AP</th>'
   + '<th ' + sort('age', sortBy, -1) + '>Age</th></tr>';
@@ -313,6 +303,9 @@ window.plugin.portalslist.portalTable = function(sortBy, sortOrder, filter) {
       + '<td style="">' + window.plugin.portalslist.getPortalLink(portal.portal, portal.guid) + '</td>'
       + '<td class="L' + Math.floor(portal.level) +'">' + portal.level + '</td>'
       + '<td style="text-align:center;">' + portal.team + '</td>';
+
+      var mitigationDetails = getPortalMitigationDetails(portal.portal);
+      portal.mitigation = mitigationDetails.total + mitigationDetails.excess;
 
       var title;
       var percent;
@@ -333,6 +326,7 @@ window.plugin.portalslist.portalTable = function(sortBy, sortOrder, filter) {
       + '<td style="cursor:help; background-color: '+COLORS_MOD[portal.mods[1][0]]+';" title="Mod : ' + portal.mods[1][3] + '\nInstalled by : ' + portal.mods[1][1] + '\nRarity : ' + portal.mods[1][0] + '">' + portal.mods[1][2] + '</td>'
       + '<td style="cursor:help; background-color: '+COLORS_MOD[portal.mods[2][0]]+';" title="Mod : ' + portal.mods[2][3] + '\nInstalled by : ' + portal.mods[2][1] + '\nRarity : ' + portal.mods[2][0] + '">' + portal.mods[2][2] + '</td>'
       + '<td style="cursor:help; background-color: '+COLORS_MOD[portal.mods[3][0]]+';" title="Mod : ' + portal.mods[3][3] + '\nInstalled by : ' + portal.mods[3][1] + '\nRarity : ' + portal.mods[3][0] + '">' + portal.mods[3][2] + '</td>'
+      + '<td>' + portal.mitigation + '</td>'
       + '<td>' + portal.APgain + '</td>'
       + '<td>' + portal.EAP + '</td>'
       + '<td style="cursor:help;" title="' + portal.age_string_long  + '">' + portal.age_string_short + '</td>';
@@ -361,7 +355,7 @@ window.plugin.portalslist.stats = function(sortBy) {
   return html;
 }
 
-// A little helper functon so the above isn't so messy
+// A little helper function so the above isn't so messy
 window.plugin.portalslist.portalTableSort = function(name, by) {
   var retVal = 'data-sort="' + name + '"';
   if(name === by) {
@@ -390,7 +384,7 @@ window.plugin.portalslist.getPortalLink = function(portal,guid) {
     onClick: jsSingleClick,
     onDblClick: jsDoubleClick
   })[0].outerHTML;
-  var div = '<div style="max-height: 15px !important; min-width:140px !important;max-width:180px !important; overflow: hidden; text-overflow:ellipsis;">'+a+'</div>';
+  var div = '<div class="portalTitle">'+a+'</div>';
   return div;
 }
 
@@ -411,13 +405,14 @@ var setup =  function() {
   $('#toolbox').append(' <a onclick="window.plugin.portalslist.displayPL()" title="Display a list of portals in the current view">Portals list</a>');
   $('head').append('<style>' +
     //style.css sets dialog max-width to 700px - override that here
+    // (the width: 800 parameter to dialog is NOT enough to override that css limit)
     '#dialog-portal-list {max-width: 800px !important;}' +
     '#portalslist table {margin-top:5px; border-collapse: collapse; empty-cells: show; width:100%; clear: both;}' +
     '#portalslist table td, #portalslist table th {border-bottom: 1px solid #0b314e; padding:3px; color:white; background-color:#1b415e}' +
-    '#portalslist table tr.res td {  background-color: #005684; }' +
-    '#portalslist table tr.enl td {  background-color: #017f01; }' +
-    '#portalslist table tr.neutral td {  background-color: #000000; }' +
-    '#portalslist table th { text-align:center;}' +
+    '#portalslist table tr.res td { background-color: #005684; }' +
+    '#portalslist table tr.enl td { background-color: #017f01; }' +
+    '#portalslist table tr.neutral td { background-color: #000000; }' +
+    '#portalslist table th { text-align: center;}' +
     '#portalslist table td { text-align: center;}' +
     '#portalslist table td.L0 { cursor: help; background-color: #000000 !important;}' +
     '#portalslist table td.L1 { cursor: help; background-color: #FECE5A !important;}' +
@@ -432,11 +427,25 @@ var setup =  function() {
     '#portalslist table th { cursor:pointer; text-align: right;}' +
     '#portalslist table th:nth-child(1) { text-align: left;}' +
     '#portalslist table th.sorted { color:#FFCE00; }' +
-    '#portalslist .filterAll { margin-top:10px;}' +
-    '#portalslist .filterRes { margin-top:10px; background-color: #005684  }' +
-    '#portalslist .filterEnl { margin-top:10px; background-color: #017f01  }' +
-    '#portalslist .disclaimer { margin-top:10px; font-size:10px; }' +
+    '#portalslist .filterAll { margin-top: 10px;}' +
+    '#portalslist .filterRes { margin-top: 10px; background-color: #005684  }' +
+    '#portalslist .filterEnl { margin-top: 10px; background-color: #017f01  }' +
+    '#portalslist .disclaimer { margin-top: 10px; font-size:10px; }' +
+    '#portalslist .portalTitle { display: inline-block; width: 160px !important; min-width: 160px !important; max-width: 160px !important; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }' +
     '</style>');
+  // Setup sorting
+  $(document).on('click.portalslist', '#portalslist table th', function() {
+    $('#portalslist').html(window.plugin.portalslist.portalTable($(this).data('sort'),window.plugin.portalslist.sortOrder,window.plugin.portalslist.filter));
+  });
+  $(document).on('click.portalslist', '#portalslist .filterAll', function() {
+    $('#portalslist').html(window.plugin.portalslist.portalTable($(this).data('sort'),window.plugin.portalslist.sortOrder,0));
+  });
+  $(document).on('click.portalslist', '#portalslist .filterRes', function() {
+    $('#portalslist').html(window.plugin.portalslist.portalTable($(this).data('sort'),window.plugin.portalslist.sortOrder,1));
+  });
+  $(document).on('click.portalslist', '#portalslist .filterEnl', function() {
+    $('#portalslist').html(window.plugin.portalslist.portalTable($(this).data('sort'),window.plugin.portalslist.sortOrder,2));
+  });
 }
 
 // PLUGIN END //////////////////////////////////////////////////////////

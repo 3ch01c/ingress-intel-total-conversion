@@ -2,7 +2,7 @@
 // @id             iitc-plugin-scoreboard@vita10gy
 // @name           IITC plugin: show a localized scoreboard.
 // @category       Info
-// @version        0.1.8.@@DATETIMEVERSION@@
+// @version        0.1.9.@@DATETIMEVERSION@@
 // @namespace      https://github.com/jonatkins/ingress-intel-total-conversion
 // @updateURL      @@UPDATEURL@@
 // @downloadURL    @@DOWNLOADURL@@
@@ -216,7 +216,7 @@ window.plugin.scoreboard.playerTable = function(sortBy) {
   return scoreHtml;
 }
 
-// A little helper functon so the above isn't so messy
+// A little helper function so the above isn't so messy
 window.plugin.scoreboard.playerTableSort = function(name, by) {
   var retVal = 'data-sort="' + name + '"';
   if(name === by) {
@@ -287,10 +287,8 @@ window.plugin.scoreboard.display = function() {
     id: 'scoreboard'
   });
 
-  // Setup sorting
-  $(document).on('click', '#players table th', function() {
-    $('#players').html(window.plugin.scoreboard.playerTable($(this).data('sort')));
-  });
+  //run the name resolving process
+  resolvePlayerNames();
 }
 
 window.plugin.scoreboard.portalDistance = function(portalAE6Location, portalBE6Location) {
@@ -331,6 +329,10 @@ var setup =  function() {
     '.mu_score span.res { background-color: #005684; text-align: right; padding-right:4px; }' +
     '.mu_score span.enl { background-color: #017f01; padding-left: 4px; }' +
     '</style>');
+  // Setup sorting
+  $(document).on('click', '#players table th', function() {
+    $('#players').html(window.plugin.scoreboard.playerTable($(this).data('sort')));
+  });
 }
 
 // PLUGIN END //////////////////////////////////////////////////////////

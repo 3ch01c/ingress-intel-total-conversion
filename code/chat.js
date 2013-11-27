@@ -81,7 +81,7 @@ window.chat.genPostData = function(isFaction, storageHash, getOlderMsgs) {
     maxLngE6: Math.round(ne.lng*1E6),
     minTimestampMs: -1,
     maxTimestampMs: -1,
-    factionOnly: isFaction
+    chatTab: isFaction ? 'faction' : 'all'
   }
 
   if(getOlderMsgs) {
@@ -90,7 +90,7 @@ window.chat.genPostData = function(isFaction, storageHash, getOlderMsgs) {
   } else {
     // ask for newer chat
     var min = storageHash.newestTimestamp;
-    // the inital request will have both timestamp values set to -1,
+    // the initial request will have both timestamp values set to -1,
     // thus we receive the newest desiredNumItems. After that, we will
     // only receive messages with a timestamp greater or equal to min
     // above.
@@ -106,6 +106,9 @@ window.chat.genPostData = function(isFaction, storageHash, getOlderMsgs) {
     // Currently this edge case is not handled. Let’s see if this is a
     // problem in crowded areas.
     $.extend(data, {minTimestampMs: min});
+    // when requesting with an acutal minimum timestamp, request oldest rather than newest first.
+    // this matches the stock intel site, and ensures no gaps when continuing after an extended idle period
+    if (min > -1) $.extend(data, {ascendingTimestampOrder: true});
   }
   return data;
 }
@@ -540,7 +543,6 @@ window.chat.show = function(name) {
         ? $('#updatestatus').hide()
         : $('#updatestatus').show();
     $('#chat, #chatinput').show();
-    $('#map').css('visibility', 'hidden');
 
     var t = $('<a>'+name+'</a>');
     window.chat.chooseAnchor(t);
@@ -681,7 +683,18 @@ window.chat.postMsg = function() {
   var msg = $.trim($('#chatinput input').val());
   if(!msg || msg === '') return;
 
-  if(c === 'debug') return new Function (msg)();
+  if(c === 'debug') {
+    var result;
+    try {
+      result = eval(msg);
+    } catch(e) {
+      if(e.stack) console.error(e.stack);
+      throw e; // to trigger native error message
+    }
+    if(result !== undefined)
+      console.log(result.toString());
+    return result;
+  }
 
   var publik = c === 'public';
   var latlng = map.getCenter();
@@ -689,7 +702,7 @@ window.chat.postMsg = function() {
   var data = {message: msg,
               latE6: Math.round(latlng.lat*1E6),
               lngE6: Math.round(latlng.lng*1E6),
-              factionOnly: !publik};
+              chatTab: publik ? 'all' : 'faction'};
 
   var errMsg = 'Your message could not be delivered. You can copy&' +
                'paste it here and try again if you want:\n\n' + msg;

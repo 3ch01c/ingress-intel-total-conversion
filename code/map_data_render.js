@@ -7,7 +7,7 @@ window.Render = function() {
 
   // when there are lots of portals close together, we only add some of them to the map
   // the idea is to keep the impression of the dense set of portals, without rendering them all
-  this.CLUSTER_SIZE = L.Browser.mobile ? 16 : 8;  // the map is divited into squares of this size in pixels for clustering purposes. mobile uses larger markers, so therefore larger clustering areas
+  this.CLUSTER_SIZE = L.Browser.mobile ? 16 : 8;  // the map is divided into squares of this size in pixels for clustering purposes. mobile uses larger markers, so therefore larger clustering areas
   this.CLUSTER_PORTAL_LIMIT = 4; // no more than this many portals are drawn in each cluster square
 
   // link length, in pixels, to be visible. use the portal cluster size, as shorter than this is likely hidden
@@ -33,7 +33,8 @@ window.Render.prototype.clearPortalsBelowLevel = function(level) {
   var count = 0;
   for (var guid in window.portals) {
     var p = portals[guid];
-    if (parseInt(p.options.level) < level && guid !== selectedPortal) {
+    // clear portals below specified level - unless it's the selected portal, or it's relevant to artifacts
+    if (parseInt(p.options.level) < level && guid !== selectedPortal && !artifact.isInterestingPortal(guid)) {
       this.deletePortalEntity(guid);
       count++;
     }
@@ -46,7 +47,7 @@ window.Render.prototype.clearEntitiesOutsideBounds = function(bounds) {
 
   for (var guid in window.portals) {
     var p = portals[guid];
-    if (!bounds.contains (p.getLatLng()) && guid !== selectedPortal) {
+    if (!bounds.contains (p.getLatLng()) && guid !== selectedPortal && !artifact.isInterestingPortal(guid)) {
       this.deletePortalEntity(guid);
       pcount++;
     }
@@ -126,8 +127,9 @@ window.Render.prototype.processGameEntities = function(entities) {
 // is considered complete
 window.Render.prototype.endRenderPass = function() {
 
-  // check to see if there's eny entities we haven't seen. if so, delete them
+  // check to see if there are any entities we haven't seen. if so, delete them
   for (var guid in window.portals) {
+    // special case for selected portal - it's kept even if not seen
     if (!(guid in this.seenPortalsGuid) && guid !== selectedPortal) {
       this.deletePortalEntity(guid);
     }
@@ -153,25 +155,32 @@ window.Render.prototype.bringPortalsToFront = function() {
   for (var lvl in portalsFactionLayers) {
     // portals are stored in separate layers per faction
     // to avoid giving weight to one faction or another, we'll push portals to front based on GUID order
-    var portals = {};
+    var lvlPortals = {};
     for (var fac in portalsFactionLayers[lvl]) {
       var layer = portalsFactionLayers[lvl][fac];
       if (layer._map) {
         layer.eachLayer (function(p) {
-          portals[p.options.guid] = p;
+          lvlPortals[p.options.guid] = p;
         });
       }
     }
 
-    var guids = Object.keys(portals);
+    var guids = Object.keys(lvlPortals);
     guids.sort();
 
     for (var j in guids) {
       var guid = guids[j];
+      lvlPortals[guid].bringToFront();
+    }
+  }
+
+  // artifact portals are always brought to the front, above all others
+  $.each(artifact.getInterestingPortals(), function(i,guid) {
+    if (portals[guid] && portals[guid]._map) {
       portals[guid].bringToFront();
     }
+  });
 
-  }
 }
 
 
@@ -192,7 +201,9 @@ window.Render.prototype.deletePortalEntity = function(guid) {
 window.Render.prototype.deleteLinkEntity = function(guid) {
   if (guid in window.links) {
     var l = window.links[guid];
-    linksFactionLayers[l.options.team].removeLayer(l);
+    if (linksFactionLayers[l.options.team].hasLayer(l)) {
+      linksFactionLayers[l.options.team].removeLayer(l);
+    }
     delete window.links[guid];
   }
 }
@@ -278,7 +289,7 @@ window.Render.prototype.createPortalEntity = function(ent) {
 //(as it's called from elsewhere - e.g. selecting/deselecting portals)
 
 //ALSO: change API for highlighters - make them return the updated style rather than directly calling setStyle on the portal marker
-//(can this be done in a backwardly-compatable way??)
+//(can this be done in a backwardly-compatible way??)
 
   var dataOptions = {
     level: portalLevel,
@@ -532,7 +543,7 @@ window.Render.prototype.resetPortalClusters = function() {
     this.portalClusters[cid].push(p.options.guid);
   }
 
-  // now, for each cluster, sort by some arbitary data (the guid will do), and display the first CLUSTER_PORTAL_LIMIT
+  // now, for each cluster, sort by some arbitrary data (the guid will do), and display the first CLUSTER_PORTAL_LIMIT
   for (var cid in this.portalClusters) {
     var c = this.portalClusters[cid];
 
@@ -542,7 +553,7 @@ window.Render.prototype.resetPortalClusters = function() {
       var guid = c[i];
       var p = window.portals[guid];
       var layerGroup = portalsFactionLayers[parseInt(p.options.level)][p.options.team];
-      if (i<this.CLUSTER_PORTAL_LIMIT || p.options.guid == selectedPortal) {
+      if (i<this.CLUSTER_PORTAL_LIMIT || p.options.guid == selectedPortal || artifact.isInterestingPortal(p.options.guid)) {
         if (!layerGroup.hasLayer(p)) {
           layerGroup.addLayer(p);
         }
@@ -556,7 +567,7 @@ window.Render.prototype.resetPortalClusters = function() {
 
 }
 
-// add the portal to the visiable map layer unless we pass the cluster limits
+// add the portal to the visible map layer unless we pass the cluster limits
 window.Render.prototype.addPortalToMapLayer = function(portal) {
 
   var cid = this.getPortalClusterID(portal);
@@ -568,7 +579,7 @@ window.Render.prototype.addPortalToMapLayer = function(portal) {
   // now, at this point, we could match the above re-clustr code - sorting, and adding/removing as necessary
   // however, it won't make a lot of visible difference compared to just pushing to the end of the list, then
   // adding to the visible layer if the list is below the limit
-  if (this.portalClusters[cid].length < this.CLUSTER_PORTAL_LIMIT || portal.options.guid == selectedPortal) {
+  if (this.portalClusters[cid].length < this.CLUSTER_PORTAL_LIMIT || portal.options.guid == selectedPortal || artifact.isInterestingPortal(portal.options.guid)) {
     portalsFactionLayers[parseInt(portal.options.level)][portal.options.team].addLayer(portal);
   }
 }
