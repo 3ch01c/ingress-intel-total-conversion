@@ -20,7 +20,8 @@ window.artifact.setup = function() {
 
   addResumeFunction(artifact.idleResume);
 
-  artifact.requestData();
+  // move the initial data request onto a very short timer. prevents thrown exceptions causing IITC boot failures
+  setTimeout (artifact.requestData, 1);
 
   artifact._layer = new L.LayerGroup();
   addLayerGroup ('Artifacts (Jarvis shards)', artifact._layer, true);
@@ -171,7 +172,7 @@ window.artifact.updateLayer = function() {
   artifact._layer.clearLayers();
 
   $.each(artifact.portalInfo, function(guid,data) {
-    var latlng = L.latLng ([data._entityData.locationE6.latE6/1E6, data._entityData.locationE6.lngE6/1E6]);
+    var latlng = L.latLng ([data._entityData.latE6/1E6, data._entityData.lngE6/1E6]);
 
     // jarvis shard icon
     var iconUrl = undefined;
@@ -235,8 +236,8 @@ window.artifact.showArtifactList = function() {
 
         var sortVal = 0;
 
-        var onclick = 'zoomToAndShowPortal(\''+guid+'\',['+data._entityData.locationE6.latE6/1E6+','+data._entityData.locationE6.lngE6/1E6+'])';
-        var row = '<tr><td class="portal"><a onclick="'+onclick+'" title="'+escapeHtmlSpecialChars(data._entityData.portalV2.descriptiveText.ADDRESS||'')+'">'+escapeHtmlSpecialChars(data._entityData.portalV2.descriptiveText.TITLE)+'</a></td>';
+        var onclick = 'zoomToAndShowPortal(\''+guid+'\',['+data._entityData.latE6/1E6+','+data._entityData.lngE6/1E6+'])';
+        var row = '<tr><td class="portal"><a onclick="'+onclick+'">'+escapeHtmlSpecialChars(data._entityData.title)+'</a></td>';
 
         row += '<td class="info">';
 
