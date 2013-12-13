@@ -6,7 +6,7 @@
 //@namespace      https://github.com/jonatkins/ingress-intel-total-conversion
 //@updateURL      none
 //@downloadURL    none
-//@description    [local-2013-09-28-061935] Uses the fill color of the portals to show old portals. Red = over 20 days, orange = over 10 days, yellow = over 5 days
+//@description    [local-2013-09-28-061935] Uses the fill color of the portals to show old portals. Red = over 20 days, yellow = over 10 days
 //@include        https://www.ingress.com/intel*
 //@include        http://www.ingress.com/intel*
 //@match          https://www.ingress.com/intel*
@@ -31,11 +31,14 @@ window.plugin.portalHighlighterByAge.highlight = function(data) {
 	if(getTeam(d) !== 0) {
 		// get portal age
 		var age_in_days =  Math.floor((new Date().getTime() - d.captured.capturedTime)/(24*60*60*1000));
-		var color = 'red';
-		var fill_opacity = age_in_days*.85/20 + .15;
 		// Apply colour to portal.
-		var params = {fillColor: color, fillOpacity: fill_opacity};
-		data.portal.setStyle(params);
+		if (age_in_days > 10) {
+			var color = 'yellow';
+			if (age_in_days > 20) color = 'red';
+			var fill_opacity = age_in_days*.85/15 + .15;
+			var params = {fillColor: color, fillOpacity: fill_opacity};
+			data.portal.setStyle(params);
+		}
 	}
 }
 
