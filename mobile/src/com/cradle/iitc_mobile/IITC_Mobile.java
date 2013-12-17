@@ -35,7 +35,6 @@ import com.cradle.iitc_mobile.IITC_NavigationHelper.Pane;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.Locale;
 import java.util.Stack;
 
 public class IITC_Mobile extends Activity implements OnSharedPreferenceChangeListener, LocationListener {
@@ -326,6 +325,12 @@ public class IITC_Mobile extends Activity implements OnSharedPreferenceChangeLis
     }
 
     @Override
+    protected void onDestroy() {
+        unregisterReceiver(mBroadcastReceiver);
+        super.onDestroy();
+    }
+
+    @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
 
@@ -415,8 +420,7 @@ public class IITC_Mobile extends Activity implements OnSharedPreferenceChangeLis
     }
 
     public void switchToPane(Pane pane) {
-        String name = pane.name().toLowerCase(Locale.getDefault());
-        mIitcWebView.loadUrl("javascript: window.show('" + name + "');");
+        mIitcWebView.loadUrl("javascript: window.show('" + pane.name + "');");
     }
 
     @Override
