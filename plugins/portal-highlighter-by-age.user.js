@@ -1,18 +1,18 @@
-//==UserScript==
-//@id             iitc-plugin-highlight-by-age@3ch01c
-//@name           IITC plugin: highlight old portals
-//@category       Highlighter
-//@version        0.1.0.20130928.61935
-//@namespace      https://github.com/jonatkins/ingress-intel-total-conversion
-//@updateURL      none
-//@downloadURL    none
-//@description    [local-2013-09-28-061935] Uses the fill color of the portals to show old portals. Red = over 20 days, yellow = over 10 days
-//@include        https://www.ingress.com/intel*
-//@include        http://www.ingress.com/intel*
-//@match          https://www.ingress.com/intel*
-//@match          http://www.ingress.com/intel*
-//@grant          none
-//==/UserScript==
+// ==UserScript==
+// @id             iitc-plugin-highlight-by-age@3ch01c
+// @name           IITC plugin: highlight old portals
+// @category       Highlighter
+// @version        0.2.0.@@DATETIMEVERSION@@
+// @namespace      https://github.com/jonatkins/ingress-intel-total-conversion
+// @updateURL      @@UPDATEURL@@
+// @downloadURL    @@DOWNLOADURL@@
+// @description    [@@BUILDNAME@@-@@BUILDDATE@@] Uses the fill color of the portals to show old portals. Red = over 20 days, yellow = over 10 days
+// @include        https://www.ingress.com/intel*
+// @include        http://www.ingress.com/intel*
+// @match          https://www.ingress.com/intel*
+// @match          http://www.ingress.com/intel*
+// @grant          none
+// ==/UserScript==
 
 
 function wrapper() {
