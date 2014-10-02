@@ -570,6 +570,8 @@ function boot() {
     popupAnchor: new L.Point(1, -34),
   }});
 
+  window.extractFromStock();
+  window.iitc_bg.init(); //NOTE: needs to be early (before any requests sent), but after extractFromStock()
   window.setupIdle();
   window.setupTaphold();
   window.setupStyles();
@@ -582,6 +584,7 @@ function boot() {
   window.setupSidebarToggle();
   window.updateGameScore();
   window.artifact.setup();
+  window.ornaments.setup();
   window.setupPlayerStat();
   window.setupTooltips();
   window.chat.setup();
