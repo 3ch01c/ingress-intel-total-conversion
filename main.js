@@ -1,15 +1,19 @@
 // ==UserScript==
 // @id             ingress-intel-total-conversion@jonatkins
 // @name           IITC: Ingress intel map total conversion
-// @version        0.18.2.@@DATETIMEVERSION@@
+// @version        0.24.1.@@DATETIMEVERSION@@
 // @namespace      https://github.com/jonatkins/ingress-intel-total-conversion
 // @updateURL      @@UPDATEURL@@
 // @downloadURL    @@DOWNLOADURL@@
 // @description    [@@BUILDNAME@@-@@BUILDDATE@@] Total conversion for the ingress intel map.
-// @include        http://www.ingress.com/intel*
 // @include        https://www.ingress.com/intel*
-// @match          http://www.ingress.com/intel*
+// @include        http://www.ingress.com/intel*
 // @match          https://www.ingress.com/intel*
+// @match          http://www.ingress.com/intel*
+// @include        https://www.ingress.com/mission/*
+// @include        http://www.ingress.com/mission/*
+// @match          https://www.ingress.com/mission/*
+// @match          http://www.ingress.com/mission/*
 // @grant          none
 // ==/UserScript==
 
@@ -72,14 +76,14 @@ document.getElementsByTagName('body')[0].innerHTML = ''
   + '<div id="map">Loading, please wait</div>'
   + '<div id="chatcontrols" style="display:none">'
   + '<a accesskey="0" title="[0]"><span class="toggle expand"></span></a>'
-  + '<a accesskey="1" title="[1]">full</a><a accesskey="2" title="[2]">compact</a>'
-  + '<a accesskey="3" title="[3]">public</a><a accesskey="4" title="[4]" class="active">faction</a>'
+  + '<a accesskey="1" title="[1]">all</a>'
+  + '<a accesskey="2" title="[2]" class="active">faction</a>'
+  + '<a accesskey="3" title="[3]">alerts</a>'
   + '</div>'
   + '<div id="chat" style="display:none">'
   + '  <div id="chatfaction"></div>'
-  + '  <div id="chatpublic"></div>'
-  + '  <div id="chatcompact"></div>'
-  + '  <div id="chatfull"></div>'
+  + '  <div id="chatall"></div>'
+  + '  <div id="chatalerts"></div>'
   + '</div>'
   + '<form id="chatinput" style="display:none"><table><tr>'
   + '  <td><time></time></td>'
@@ -91,15 +95,16 @@ document.getElementsByTagName('body')[0].innerHTML = ''
   + '  <div id="sidebar" style="display: none">'
   + '    <div id="playerstat">t</div>'
   + '    <div id="gamestat">&nbsp;loading global control stats</div>'
-  + '    <div id="geosearchwrapper">'
-  + '      <input id="geosearch" placeholder="Search location…" type="text" accesskey="f" title="Search for a place [f]"/>'
-  + '      <img src="@@INCLUDEIMAGE:images/current-location.png@@"/ title="Current Location">'
+  + '    <div id="searchwrapper">'
+  + '      <img src="@@INCLUDEIMAGE:images/current-location.png@@"/ title="Current Location" id="buttongeolocation">'
+  + '      <input id="search" placeholder="Search location…" type="search" accesskey="f" title="Search for a place [f]"/>'
   + '    </div>'
   + '    <div id="portaldetails"></div>'
   + '    <input id="redeem" placeholder="Redeem code…" type="text"/>'
   + '    <div id="toolbox">'
   + '      <a onmouseover="setPermaLink(this)" onclick="setPermaLink(this);return androidPermalink()" title="URL link to this map view">Permalink</a>'
   + '      <a onclick="window.aboutIITC()" style="cursor: help">About IITC</a>'
+  + '      <a onclick="window.regionScoreboard()" title="View regional scoreboard">Region scores</a>'
   + '    </div>'
   + '  </div>'
   + '</div>'
@@ -131,13 +136,10 @@ window.ZOOM_LEVEL_ADJ = 5; // add 5 seconds per zoom level
 window.ON_MOVE_REFRESH = 2.5;  //refresh time to use after a movement event
 window.MINIMUM_OVERRIDE_REFRESH = 10; //limit on refresh time since previous refresh, limiting repeated move refresh rate
 window.REFRESH_GAME_SCORE = 15*60; // refresh game score every 15 minutes
-window.MAX_IDLE_TIME = 4*60; // stop updating map after 4min idling
+window.MAX_IDLE_TIME = 15*60; // stop updating map after 15min idling
 window.HIDDEN_SCROLLBAR_ASSUMED_WIDTH = 20;
 window.SIDEBAR_WIDTH = 300;
 
-// how many items to request each query
-window.CHAT_PUBLIC_ITEMS = 50;
-window.CHAT_FACTION_ITEMS = 50;
 // how many pixels to the top before requesting new data
 window.CHAT_REQUEST_SCROLL_TOP = 200;
 window.CHAT_SHRINKED = 60;
@@ -149,7 +151,7 @@ window.FIELD_MU_DISPLAY_AREA_ZOOM_RATIO = 0.001;
 window.FIELD_MU_DISPLAY_POINT_TOLERANCE = 60
 
 window.COLOR_SELECTED_PORTAL = '#f0f';
-window.COLORS = ['#FF9900', '#0088FF', '#03DC03']; // none, res, enl
+window.COLORS = ['#FF6600', '#0088FF', '#03DC03']; // none, res, enl
 window.COLORS_LVL = ['#000', '#FECE5A', '#FFA630', '#FF7315', '#E40000', '#FD2992', '#EB26CD', '#C124E0', '#9627F4'];
 window.COLORS_MOD = {VERY_RARE: '#b08cff', RARE: '#73a8ff', COMMON: '#8cffbf'};
 
@@ -162,13 +164,12 @@ window.MOD_TYPE = {RES_SHIELD:'Shield', MULTIHACK:'Multi-hack', FORCE_AMP:'Force
 window.ACCESS_INDICATOR_COLOR = 'orange';
 window.RANGE_INDICATOR_COLOR = 'red'
 
-// by how much pixels should the portal range be expanded on mobile
-// devices. This should make clicking them easier.
-window.PORTAL_RADIUS_ENLARGE_MOBILE = 5;
-
+// min zoom for intel map - should match that used by stock intel
+window.MIN_ZOOM = 3;
 
 window.DEFAULT_PORTAL_IMG = '//commondatastorage.googleapis.com/ingress.com/img/default-portal-image.png';
-window.NOMINATIM = '//nominatim.openstreetmap.org/search?format=json&limit=1&q=';
+//window.NOMINATIM = '//nominatim.openstreetmap.org/search?format=json&limit=1&q=';
+window.NOMINATIM = '//open.mapquestapi.com/nominatim/v1/search.php?format=json&polygon_geojson=1&q=';
 
 // INGRESS CONSTANTS /////////////////////////////////////////////////
 // http://decodeingress.me/2012/11/18/ingress-portal-levels-and-link-range/
@@ -203,6 +204,7 @@ window.DEG2RAD = Math.PI / 180;
 // getters/setters, but if you are careful enough, this works.
 window.refreshTimeout = undefined;
 window.urlPortal = null;
+window.urlPortalLL = null;
 window.selectedPortal = null;
 window.portalRangeIndicator = null;
 window.portalAccessIndicator = null;

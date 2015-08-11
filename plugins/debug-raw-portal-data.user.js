@@ -2,7 +2,7 @@
 // @id             iitc-plugin-raw-portal-data
 // @name           IITC plugin: Debug: Raw portal JSON data
 // @category       Debug
-// @version        0.2.3.@@DATETIMEVERSION@@
+// @version        0.2.4.@@DATETIMEVERSION@@
 // @namespace      rawdata
 // @updateURL      @@UPDATEURL@@
 // @downloadURL    @@DOWNLOADURL@@
@@ -11,6 +11,10 @@
 // @include        http://www.ingress.com/intel*
 // @match          https://www.ingress.com/intel*
 // @match          http://www.ingress.com/intel*
+// @include        https://www.ingress.com/mission/*
+// @include        http://www.ingress.com/mission/*
+// @match          https://www.ingress.com/mission/*
+// @match          http://www.ingress.com/mission/*
 // @grant          none
 // ==/UserScript==
 
@@ -44,7 +48,7 @@ window.plugin.rawdata.showPortalData = function(guid) {
   var body =
     '<b>Portal GUID</b>: <code>'+guid+'</code><br />' +
     '<b>Entity timestamp</b>: <code>'+ts+'</code> - '+window.unixTimeToDateTimeString(ts,true)+'<br />' + 
-    '<pre>'+JSON.stringify(data,null,2)+'</pre>';
+    '<b>Portal map data:</b><pre>'+JSON.stringify(data,null,2)+'</pre>';
 
   var details = portalDetail.get(guid);
   if (details) {

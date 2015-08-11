@@ -13,29 +13,34 @@ offers many more features. It is available for
 
 <h3>Latest news</h3>
 
-<h4>6th October 2014</h4>
+<h4>27th June 2015</h4>
 <p>
-IITC 0.18.1 and IITC Mobile 0.11.7 have just been released. Changes include
+IITC 0.24.0 has been released. This is a critical update needed to fix the map not loading any data.
+</p>
+<p>
+NOTE: Niantic have removed portals from the map data at all but the closest of zoom levels (L1+ - zoom 15+).
+The stock intel site creates dummy placeholder portals at the anchors for links, allowing you to click and open the
+portal details. However, IITC does not do this yet. It will take some time to modify IITC and the plugins to allow
+for such placeholder portals, so making a first release without them.
+</p>
+
+<h4>27th May 2015</h4>
+<p>
+IITC 0.23.0 has been released. This is a critical update needed to fix IITC after a Niantic site update.
+</p>
+
+<h4>8th May 2015</h4>
+<p>
+IITC 0.22.3 has been released. Changes include
 </p>
 <ul>
-<li>Added support for 'ornaments' - per-portal markers sent from the server, currently used for anomaly portals.</li>
-<li>Player tracker plugin - fix player tracker when faction COMM is viewed.</li>
-<li>Passcodes - fix displaying results from passcode redemption.</li>
-<li>Other minor tweaks and bugfixes.</li>
+<li>Lightman Shards supported</li>
+<li>Workaround for map loading not reaching 100%</li>
+<li>IITC Mobile: fix dialogs not appearing on Android 5 with the System WebView update</li>
+<li>Remove unnecessary prompt on botguard script response</li>
+<li>Plugin: Missions - full mission support</li>
+<li>Plugin: show-linked-portals - more details shown</li>
+<li>Plugin: show-more-portals - enabled again for one zoom level</li>
 </ul>
-
-<h4>17th September 2014</h4>
-<p>
-IITC 0.18.0 and IITC Mobile 0.11.6 have just been released. This is an important update required to fix a few
-problems caused in recent Niantic site updates.
-</p>
-<p>Changes include:</p>
-<ul>
-<li>New plugin: layer count. Counts the number of overlapping layers on the map at the selected point</li>
-<li>Portals list plugin: A major update, including integration with the bookmarks and uniques plugins</li>
-<li>COMM bugfixes: only load the visible tab (in preperation for adding the 'alerts' tab), and fix COMM not loading on global map view</li>
-<li>plus other tweaks and bugfixes...</li>
-</ul>
-
 
 <a class="btn btn-default btn-sm" href="?page=news">Older news</a>
